@@ -3,6 +3,7 @@
 #include <vector>     // For std::vector (used by captainsLog)
 #include <fstream>
 #include "captains_log.hpp"
+#include "game.hpp"
 
 void CaptainsLog::addToCaptainsLog(const std::string &entry)
 {
@@ -25,7 +26,10 @@ void CaptainsLog::initializeCaptainsLog() {
     }
 }
 
-// Creates a new Captain's Log by clearing the current log (if any)
+void Game::initializeStep(const std::string &step)
+{
+    ::initializeStep(step);
+} // Creates a new Captain's Log by clearing the current log (if any)
 void CaptainsLog::createCaptainsLog() {
     captainsLog.clear();
     std::cout << "Captain's Log has been cleared and is now empty.\n";

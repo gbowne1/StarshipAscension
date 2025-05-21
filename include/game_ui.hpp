@@ -16,7 +16,7 @@ public:
     void displaySetupMenu();
     void displayShipSystemsOverview();
     void displayCredits();
-
+    void listSaveFiles();
     // Assume these are implemented elsewhere
     void manageCrew(); // From crew_manager.hpp, can optionally forward declare here
 
@@ -47,7 +47,7 @@ private:
     void stopGame();
 
     // Save/load stubs assumed to exist
-    void listSaveFiles();
+
     void loadFromPlainText(const std::string& filename);
     void loadFromXML(const std::string& filename);
     void loadFromBinary(const std::string& filename);

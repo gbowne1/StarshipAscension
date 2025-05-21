@@ -117,3 +117,11 @@ void CrewManager::viewCrewStatus()
     std::cin.get();
     manageCrew();
 }
+
+void CrewManager::clearScreen() {
+    // e.g., system("cls"); on Windows
+}
+
+void CrewManager::displayMainMenu() {
+    // your menu logic
+}

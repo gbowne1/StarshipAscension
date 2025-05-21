@@ -7,6 +7,7 @@
 #include "../include/nlohmann/json.hpp"
 #include "save_manager.hpp"
 #include "game_ui.hpp"
+#include "game.hpp"
 
 void SaveGame::saveGame()
 {
@@ -237,6 +238,11 @@ void SaveGame::loadFromBinary(const std::string &fileName)
     loadFile.close();
 }
 
+void Game::setPlayerName(std::string& name)
+{
+    playerName = name;
+}
+
 void SaveGame::loadFromJSON(const std::string &fileName)
 {
     std::ifstream loadFile(fileName);
@@ -256,6 +262,10 @@ void SaveGame::loadFromJSON(const std::string &fileName)
     loadFile.close();
 }
 
+void SaveGame::clearScreen() const
+{
+}
+
 void SaveGame::saveAsJSON(const std::string &fileName)
 {
     nlohmann::json saveData;
@@ -266,4 +276,8 @@ void SaveGame::saveAsJSON(const std::string &fileName)
     std::ofstream saveFile(fileName);
     saveFile << saveData.dump(4); // Pretty print JSON
     saveFile.close();
+}
+
+void SaveGame::displayMainMenu() const {
+    // show the save/load menu
 }

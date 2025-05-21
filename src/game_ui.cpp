@@ -37,16 +37,16 @@ void GameUi::displayMainMenu()
     std::cout << "=====================================" << std::endl;
     std::cout << "             Main Menu               " << std::endl;
     std::cout << "=====================================" << std::endl;
-    std::cout << "1. Start New GameUi" << std::endl;
-    std::cout << "2. Continue GameUi" << std::endl;
+    std::cout << "1. Start New Game" << std::endl;
+    std::cout << "2. Continue Game" << std::endl;
     // TODO: Implement save GameUi functionality, renumber the menu options accordingly
-    std::cout << "3. Save GameUi" << std::endl;
-    std::cout << "3. Load Saved GameUi" << std::endl;
+    std::cout << "3. Save Game" << std::endl;
+    std::cout << "3. Load Saved Game" << std::endl;
     std::cout << "4. Captain's Log" << std::endl;
     std::cout << "5. Mission Briefing" << std::endl;
     std::cout << "6. Ship Systems Overview" << std::endl;
     std::cout << "7. Help" << std::endl;
-    std::cout << "8. Setup GameUi" << std::endl;
+    std::cout << "8. Setup Game" << std::endl;
     std::cout << "9. Credits" << std::endl;
     std::cout << "10. Exit" << std::endl;
     std::cout << "11. Resume Last Mission" << std::endl;
@@ -129,7 +129,7 @@ void GameUi::displayMainMenu()
                 loadFromPlainText(fileName);
                 break;
             case 2:
-                loadFromJSON(fileName);
+                // loadFromJSON(fileName);
                 break;
             case 3:
                 loadFromXML(fileName);
@@ -425,4 +425,28 @@ void renderProgressBar(int progress, int total)
     for (int i = filledWidth; i < barWidth; ++i)
         std::cout << " ";
     std::cout << "] " << (progress * 100) / total << "%\r" << std::flush;
+}
+
+void GameUi::listSaveFiles() {
+    std::cout << "Listing save files..." << std::endl;
+}
+
+void GameUi::loadFromPlainText(const std::string& filename) {
+    std::cout << "Loading from plain text file: " << filename << std::endl;
+}
+
+void GameUi::loadFromXML(const std::string& filename) {
+    std::cout << "Loading from XML: " << filename << std::endl;
+}
+
+void GameUi::loadFromBinary(const std::string& filename) {
+    std::cout << "Loading from binary: " << filename << std::endl;
+}
+
+void GameUi::stopGame() {
+    std::cout << "Stopping game..." << std::endl;
+}
+
+void GameUi::manageCrew() {
+    std::cout << "Managing crew..." << std::endl;
 }
