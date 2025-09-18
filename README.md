@@ -32,6 +32,3 @@ Requires CMake 3.10+, g++, glog (for logging).
 - Add multiplayer
 - Expand game world
 - Unit tests with gtest
-ultiplayer
-- Expand game world
-- Unit tests with gtest
