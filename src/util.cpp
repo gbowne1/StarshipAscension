@@ -2,8 +2,134 @@
 #include <vector>
 #include <iomanip>
 #include <sstream>
+#include <string>
+#include <iostream>
+#include <cctype>
+
+// Platform-specific includes for console I/O
+#ifdef _WIN32
+#include <conio.h> // For _getch()
+#else
+#include <termios.h> // For termios, tcgetattr, tcsetattr
+#include <unistd.h>  // For read(), STDIN_FILENO, isatty()
+#endif
 
 namespace starship {
+
+#ifndef _WIN32
+// RAII (Resource Acquisition Is Initialization) guard for Unix-like terminal settings.
+// This class ensures that terminal settings are restored to their original state
+// when it goes out of scope, even if exceptions or early returns occur.
+class TerminalSettingsGuard {
+public:
+    TerminalSettingsGuard() : settings_applied_(false) {
+        // Check if STDIN is actually a terminal. If not, we cannot manipulate settings.
+        if (!isatty(STDIN_FILENO)) {
+            std::cerr << "Warning: Standard input is not a terminal. Password input will be visible." << std::endl;
+            return;
+        }
+
+        // Save original terminal attributes. If this fails, we cannot proceed with hiding.
+        if (tcgetattr(STDIN_FILENO, &original_termios_) == -1) {
+            std::cerr << "Warning: Failed to get terminal attributes. Password input will be visible." << std::endl;
+            return;
+        }
+
+        // Create new terminal attributes for raw input:
+        // - Disable ICANON (canonical mode) to get characters immediately without waiting for newline.
+        // - Disable ECHO to prevent characters from being printed to the console.
+        struct termios new_termios = original_termios_;
+        new_termios.c_lflag &= ~(ICANON | ECHO); // Disable canonical mode and echoing
+
+        // Apply new terminal attributes. If this fails, we couldn't hide input.
+        if (tcsetattr(STDIN_FILENO, TCSANOW, &new_termios) == -1) {
+            std::cerr << "Warning: Failed to set new terminal attributes. Password input will be visible." << std::endl;
+            return;
+        }
+        settings_applied_ = true; // Mark that settings were successfully applied
+    }
+
+    // Destructor to restore original terminal settings.
+    ~TerminalSettingsGuard() {
+        if (settings_applied_) {
+            // Restore original terminal attributes.
+            // Errors here cannot throw, so they are logged to std::cerr.
+            if (tcsetattr(STDIN_FILENO, TCSANOW, &original_termios_) == -1) {
+                std::cerr << "Error: Failed to restore terminal attributes." << std::endl;
+            }
+        }
+    }
+
+    // Check if terminal settings were successfully applied for hiding.
+    bool areSettingsApplied() const {
+        return settings_applied_;
+    }
+
+    // Prevent copying and moving to ensure proper RAII behavior.
+    TerminalSettingsGuard(const TerminalSettingsGuard&) = delete;
+    TerminalSettingsGuard& operator=(const TerminalSettingsGuard&) = delete;
+
+private:
+    struct termios original_termios_; // Stores original terminal settings
+    bool settings_applied_;           // Flag to indicate if settings were successfully modified
+};
+#endif // _WIN32
+
+// Note: This should be declared as 'static' in the Util class definition in util.h
+std::string Util::getPasswordInput(char mask_char) {
+    std::string password;
+
+#ifdef _WIN32
+    char ch;
+    // Loop until the Enter key (Carriage Return) is pressed
+    while ((ch = _getch()) != '\r') {
+        if (ch == '\b') { // Backspace key
+            if (!password.empty()) {
+                password.pop_back();
+                // Erase character from console: move cursor back, print space, move cursor back again
+                std::cout << "\b \b" << std::flush;
+            }
+        } else if (std::isprint(static_cast<unsigned char>(ch))) { // Only process printable characters
+            password.push_back(ch);
+            std::cout << mask_char << std::flush; // Print mask character and flush to ensure it's visible
+        }
+    }
+    std::cout << std::endl; // Print a newline after input is complete
+#else
+    // Unix-like systems
+    // The RAII guard manages terminal settings, ensuring they are restored.
+    TerminalSettingsGuard guard;
+
+    // If terminal settings could not be applied (e.g., not a TTY),
+    // fallback to standard visible input using std::getline.
+    if (!guard.areSettingsApplied()) {
+        std::getline(std::cin, password);
+        return password;
+    }
+
+    char ch;
+    // Read characters one by one from STDIN_FILENO
+    while (read(STDIN_FILENO, &ch, 1) > 0) {
+        if (ch == '\n') { // Enter key (Line Feed)
+            break;
+        } else if (ch == 127 || ch == '\b') { // Backspace (ASCII DEL or BS)
+            if (!password.empty()) {
+                password.pop_back();
+                // Erase character from console: move cursor back, print space, move cursor back again
+                std::cout << "\b \b" << std::flush;
+            }
+        } else if (std::isprint(static_cast<unsigned char>(ch))) { // Printable character
+            password.push_back(ch);
+            std::cout << mask_char << std::flush; // Print mask character and flush output
+        }
+    }
+    // The RAII guard ensures terminal settings are restored regardless of read outcome.
+
+    std::cout << std::endl; // Print a newline after input is complete
+#endif
+
+    return password;
+}
 
 std::string Util::Sha256(const std::string& input) {
   uint32_t h[8] = {
