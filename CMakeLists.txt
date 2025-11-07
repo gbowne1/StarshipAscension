@@ -12,8 +12,7 @@ include_directories(include)
 
 add_executable(StarshipAscension src/main.cpp src/game.cpp src/util.cpp)
 
-# Link glog if installed
-find_library(GLOG_LIBRARY glog)
-if(GLOG_LIBRARY)
-  target_link_libraries(StarshipAscension ${GLOG_LIBRARY})
-endif()
+# Find and Link glog if installed
+find_package(glog REQUIRED)
+
+target_link_libraries(StarshipAscension PRIVATE glog::glog)
