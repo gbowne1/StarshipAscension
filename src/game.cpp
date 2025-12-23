@@ -140,7 +140,7 @@ void Game::ShowTitle() {
 void Game::Login() {
   ClearScreen();
   std::string choice;
-  std::cout << "\n1. Login\n2. Register\nChoice: ";
+  std::cout << "1. Login\n2. Register\nChoice: ";
   std::cin >> choice;
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
@@ -404,7 +404,7 @@ void Game::ShowProgressBar(const std::string& label, int duration_ms) {
 }
 
 void Game::ClearScreen() {
-  std::cout << "\033[2J\033[1;1H";
+  std::cout << "\033[2J\033[1;1H\n";
 }
 
 void Game::SetColor(const std::string& color) {
