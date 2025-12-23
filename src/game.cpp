@@ -1,6 +1,8 @@
 #include "game.h"
 #include "util.h"
 #include <iostream>
+#include <termios.h>
+#include <unistd.h> // Required for STDIN_FILENO
 
 namespace starship {
 
@@ -12,6 +14,17 @@ constexpr double PI = 3.14159265358979323846;
 /* #define _WIN64 */
 /* #define _GNU_SOURCE */
 /* #define _CRT_SECURE_NO_WARNINGS */
+
+void setStdinEcho(bool enable = true) {
+    struct termios tty;
+    tcgetattr(STDIN_FILENO, &tty);
+    if (enable) {
+        tty.c_lflag |= ECHO;
+    } else {
+        tty.c_lflag &= ~ECHO;
+    }
+    tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+}
 
 Game::Game() : rng_(std::random_device{}()) {
   Initialize();
@@ -127,7 +140,7 @@ void Game::ShowTitle() {
 void Game::Login() {
   ClearScreen();
   std::string choice;
-  std::cout << "1. Login\n2. Register\nChoice: ";
+  std::cout << "\n1. Login\n2. Register\nChoice: ";
   std::cin >> choice;
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
@@ -135,7 +148,9 @@ void Game::Login() {
   std::cout << "Username: ";
   std::getline(std::cin, username);
   std::cout << "Password: ";
+  setStdinEcho(false); // Disable echoing
   std::getline(std::cin, password);
+  setStdinEcho(true); // Re-enable echoing
 
   if (choice == "1") {
     if (VerifyUser(username, password)) {
