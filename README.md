@@ -26,7 +26,7 @@ Copyright 2025 Gregory Bowne
 Requires CMake 3.10+, g++, glog (for logging).
 
 ## Run
-./StarshipAscension
+./run.sh
 
 ## TODO
 - Add multiplayer
