@@ -635,6 +635,7 @@ namespace starship
       c = std::getchar(); /* A B C D */
       return c;
     }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return std::tolower(c);
   }
 
