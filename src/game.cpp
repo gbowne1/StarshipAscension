@@ -404,8 +404,6 @@ namespace starship
       RaiseShields();
     else if (cmd == 'm')
       current_state_ = State::MAIN_MENU;
-    else
-      PlayGame();
   }
 
   void Game::Navigate()
