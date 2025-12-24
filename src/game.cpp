@@ -419,7 +419,6 @@ namespace starship
     else if (dir == 'd' || dir == 'C')
       ++position_.first;
     LogEntry("Navigated to (" + std::to_string(position_.first) + ", " + std::to_string(position_.second) + ")");
-    PlayGame();
   }
 
   void Game::ScanLongRange()
@@ -437,7 +436,6 @@ namespace starship
       std::cout << "Starbase at (" << s.first << ", " << s.second << ")" << std::endl;
     std::cout << "Press enter..." << std::endl;
     std::cin.get();
-    PlayGame();
   }
 
   void Game::ScanShortRange()
@@ -508,8 +506,6 @@ namespace starship
     std::cout << std::endl
               << "Press Enter to return..." << std::endl;
     std::cin.get();
-
-    PlayGame();
   }
 
   void Game::EnemyTurn()
@@ -566,7 +562,6 @@ namespace starship
       ResetColor();
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    PlayGame();
   }
 
   void Game::RaiseShields()
@@ -576,7 +571,6 @@ namespace starship
       systems_.shields += 10;
       std::cout << "Shields raised to " << systems_.shields << std::endl;
     }
-    PlayGame();
   }
 
   void Game::LogEntry(const std::string &entry)
