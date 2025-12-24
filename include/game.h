@@ -161,6 +161,8 @@ private:
 
   void Beep();
 
+  void EnemyTurn();
+
   /* Getters/Setters */
   double GetHealth() const { return systems_.health; }
   void SetHealth(double h) { systems_.health = h; }

@@ -514,6 +514,42 @@ namespace starship
     PlayGame();
   }
 
+  void Game::EnemyTurn()
+  {
+    if (enemies_.empty())
+      return;
+
+    /* Find nearest enemy */
+    double min_dist = std::numeric_limits<double>::max();
+    std::pair<int, int> nearest = enemies_[0];
+    bool found = false;
+
+    for (const auto &e : enemies_)
+    {
+      double dx = e.first - position_.first;
+      double dy = e.second - position_.second;
+      double dist = std::sqrt(dx * dx + dy * dy);
+      if (dist < min_dist)
+      {
+        min_dist = dist;
+        nearest = e;
+        found = true;
+      }
+    }
+
+    if (found)
+    {
+      SetColor("red");
+      std::cout << "Enemy at (" << nearest.first << ", " << nearest.second << ") attacks you!" << std::endl;
+      ResetColor();
+      systems_.health -= 10.0;
+      if (systems_.health < 0)
+        systems_.health = 0;
+      LogEntry("Attacked by enemy at (" + std::to_string(nearest.first) + ", " + std::to_string(nearest.second) + ")");
+      ShowProgressBar("Taking Damage", 500);
+    }
+  }
+
   void Game::FireWeapons()
   {
     /* Simple fire */
@@ -523,6 +559,7 @@ namespace starship
       Beep();
       /* Remove enemy if hit */
       score_ += 10;
+      EnemyTurn();
     }
     else
     {
