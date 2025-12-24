@@ -655,9 +655,9 @@ namespace starship
         InverseText(false);
       }
       char key = GetKey();
-      if (key == 'A' || key == 'w')
+      if (key == 'a' || key == 'w')
         selected = std::max(0, selected - 1);
-      else if (key == 'B' || key == 's')
+      else if (key == 'b' || key == 's')
         selected = std::min(static_cast<int>(options.size() - 1), selected + 1);
       else if (key == '\n' || key == '\r')
         return selected;
