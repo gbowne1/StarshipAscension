@@ -781,19 +781,48 @@ namespace starship
     ifs.read(reinterpret_cast<char *>(&score_), sizeof(score_));
     ifs.read(reinterpret_cast<char *>(&systems_), sizeof(systems_));
     ifs.read(reinterpret_cast<char *>(&position_), sizeof(position_));
+
+    // Maximum allowed sizes to prevent crashes from corrupted files
+    const std::size_t MAX_ENEMIES = 100;
+    const std::size_t MAX_FRIENDS = 50;
+    const std::size_t MAX_PLANETS = 50;
+    const std::size_t MAX_STARBASES = 20;
+
+    // --- Enemies ---
     std::size_t size;
     ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
+    if(size > MAX_ENEMIES) size = MAX_ENEMIES;
     enemies_.resize(size);
-    for (auto &e : enemies_)
-      ifs.read(reinterpret_cast<char *>(&e), sizeof(e));
-    /* Similar for others */
+    for(auto &e : enemies_) ifs.read(reinterpret_cast<char *>(&e), sizeof(e));
+
+    // --- Friends ---
+    ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
+    if(size > MAX_FRIENDS) size = MAX_FRIENDS;
+    friends_.resize(size);
+    for(auto &f : friends_) ifs.read(reinterpret_cast<char *>(&f), sizeof(f));
+
+    // --- Planets ---
+    ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
+    if(size > MAX_PLANETS) size = MAX_PLANETS;
+    planets_.resize(size);
+    for(auto &p : planets_) ifs.read(reinterpret_cast<char *>(&p), sizeof(p));
+
+    // --- Starbases ---
+    ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
+    if(size > MAX_STARBASES) size = MAX_STARBASES;
+    starbases_.resize(size);
+    for(auto &s : starbases_) ifs.read(reinterpret_cast<char *>(&s), sizeof(s));
+
+    // --- Captain's Log (text) ---
     captains_log_.clear();
-    while (ifs)
-    {
+    while(ifs) {
       std::size_t len;
       ifs.read(reinterpret_cast<char *>(&len), sizeof(len));
-      if (ifs.eof())
-        break;
+      if(ifs.eof()) break;
+
+      const std::size_t MAX_LOG_LEN = 1024;
+      if(len > MAX_LOG_LEN) len = MAX_LOG_LEN;
+
       std::string log(len, ' ');
       ifs.read(&log[0], len);
       captains_log_.push_back(log);
