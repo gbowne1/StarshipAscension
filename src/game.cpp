@@ -7,7 +7,7 @@
 namespace starship
 {
 
-  constexpr double PI = 3.14159265358979323846;
+//constexpr double PI = 3.14159265358979323846;
 
 #define _XOPEN_SOURCE 700
 #define _POSIX_C_SOURCE 200809L
@@ -29,6 +29,28 @@ namespace starship
       tty.c_lflag &= ~ECHO;
     }
     tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+  }
+
+  namespace {
+    struct RawTerminalMode {
+      termios old_tio;
+      bool active{false};
+
+      RawTerminalMode() {
+        if (tcgetattr(STDIN_FILENO, &old_tio) == -1) return;
+
+        termios raw = old_tio;
+        raw.c_lflag &= ~(ICANON | ECHO);
+        raw.c_cc[VMIN] = 1;
+        raw.c_cc[VTIME] = 0;
+
+        if(tcsetattr(STDIN_FILENO, TCSANOW, &raw) == 0) active = true;
+      }
+
+      ~RawTerminalMode() {
+        if(active) tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+      }
+    };
   }
 
   Game::Game() : rng_(std::random_device{}())
@@ -657,14 +679,24 @@ namespace starship
 
   char Game::GetKey()
   {
-    char c = std::getchar();
-    if (c == '\033')
-    {
-      std::getchar();     /* [ */
-      c = std::getchar(); /* A B C D */
-      return c;
+    RawTerminalMode raw;
+
+    char c;
+    if(read(STDIN_FILENO, &c, 1) != 1) return 0;
+
+    if(c == '\033') {
+      char seq[2];
+      if(read(STDIN_FILENO, &seq[0], 1) != 1) return 0;
+      if(read(STDIN_FILENO, &seq[1], 1) != 1) return 0;
+
+      if(seq[0] == '[') {
+        return seq[1];
+      }
+      return 0;
     }
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    if(c == '\n' || c == '\r') return '\n';
+
     return std::tolower(c);
   }
 
