@@ -25,6 +25,9 @@ Copyright 2025 Gregory Bowne
 
 Requires CMake 3.10+, g++, glog (for logging).
 
+## Install dependencies in Ubuntu and Debian family Operating Systems for building this game
+./install.sh
+
 ## Run
 ./run.sh
 
