@@ -31,6 +31,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <glog/logging.h>
+#include <functional>
+
 
 namespace starship {
 
@@ -137,7 +139,10 @@ private:
 
   void LogEntry(const std::string& entry);
 
-  void ShowProgressBar(const std::string& label, int duration_ms);
+  void ShowProgressBar(
+  const std::vector<std::pair<std::string, std::function<void()>>>& tasks
+  );
+
 
   void ClearScreen();
 

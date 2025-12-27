@@ -3,11 +3,12 @@
 #include <iostream>
 #include <termios.h>
 #include <unistd.h> // Required for STDIN_FILENO
+#include <functional>
 
 namespace starship
 {
 
-//constexpr double PI = 3.14159265358979323846;
+  // constexpr double PI = 3.14159265358979323846;
 
 #define _XOPEN_SOURCE 700
 #define _POSIX_C_SOURCE 200809L
@@ -31,24 +32,31 @@ namespace starship
     tcsetattr(STDIN_FILENO, TCSANOW, &tty);
   }
 
-  namespace {
-    struct RawTerminalMode {
+  namespace
+  {
+    struct RawTerminalMode
+    {
       termios old_tio;
       bool active{false};
 
-      RawTerminalMode() {
-        if (tcgetattr(STDIN_FILENO, &old_tio) == -1) return;
+      RawTerminalMode()
+      {
+        if (tcgetattr(STDIN_FILENO, &old_tio) == -1)
+          return;
 
         termios raw = old_tio;
         raw.c_lflag &= ~(ICANON | ECHO);
         raw.c_cc[VMIN] = 1;
         raw.c_cc[VTIME] = 0;
 
-        if(tcsetattr(STDIN_FILENO, TCSANOW, &raw) == 0) active = true;
+        if (tcsetattr(STDIN_FILENO, TCSANOW, &raw) == 0)
+          active = true;
       }
 
-      ~RawTerminalMode() {
-        if(active) tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+      ~RawTerminalMode()
+      {
+        if (active)
+          tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
       }
     };
   }
@@ -324,9 +332,27 @@ namespace starship
   {
     ClearScreen();
     std::cout << "Starting a new game" << std::endl;
-    ShowProgressBar("Loading", 2000);
+    ShowProgressBar({
+  {"Generating stars...", [this]() {
+    planets_.clear();
+    planets_ = {{15, 15}};
+  }},
+  {"Generating enemies...", [this]() {
+    enemies_ = {{10, 10}, {20, 20}};
+  }},
+  {"Generating allies...", [this]() {
+    friends_ = {{5, 5}};
+  }},
+  {"Placing starbases...", [this]() {
+    starbases_ = {{25, 25}};
+  }},
+  {"Finalizing game state...", [this]() {
     Initialize();
-    current_state_ = State::PLAYING;
+  }}
+});
+
+current_state_ = State::PLAYING;
+
   }
 
   void Game::Resume()
@@ -562,7 +588,7 @@ namespace starship
       if (systems_.health < 0)
         systems_.health = 0;
       LogEntry("Attacked by enemy at (" + std::to_string(nearest.first) + ", " + std::to_string(nearest.second) + ")");
-      ShowProgressBar("Taking Damage", 500);
+    
     }
   }
 
@@ -609,18 +635,31 @@ namespace starship
     LOG(INFO) << stamped; /* glog */
   }
 
-  void Game::ShowProgressBar(const std::string &label, int duration_ms)
+  void Game::ShowProgressBar(const std::vector<std::pair<std::string, std::function<void()>>> &tasks)
   {
-    int steps = 20;
-    int sleep_ms = duration_ms / steps;
-    std::cout << label << ": [";
-    for (int i = 0; i < steps; ++i)
+    const int total = tasks.size();
+    int completed = 0;
+
+    for (const auto &task : tasks)
     {
-      std::cout << "=";
-      std::cout.flush();
-      std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+      ClearScreen();
+      std::cout << "Loading...\n\n";
+      std::cout << task.first << std::endl
+                << std::endl;
+
+      task.second(); // REAL WORK
+
+      completed++;
+      int percent = (completed * 100) / total;
+      int bars = percent / 5;
+
+      std::cout << "[";
+      for (int i = 0; i < 20; ++i)
+        std::cout << (i < bars ? "=" : " ");
+      std::cout << "] " << percent << "%\n";
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
-    std::cout << "]" << std::endl;
   }
 
   void Game::ClearScreen()
@@ -682,20 +721,26 @@ namespace starship
     RawTerminalMode raw;
 
     char c;
-    if(read(STDIN_FILENO, &c, 1) != 1) return 0;
+    if (read(STDIN_FILENO, &c, 1) != 1)
+      return 0;
 
-    if(c == '\033') {
+    if (c == '\033')
+    {
       char seq[2];
-      if(read(STDIN_FILENO, &seq[0], 1) != 1) return 0;
-      if(read(STDIN_FILENO, &seq[1], 1) != 1) return 0;
+      if (read(STDIN_FILENO, &seq[0], 1) != 1)
+        return 0;
+      if (read(STDIN_FILENO, &seq[1], 1) != 1)
+        return 0;
 
-      if(seq[0] == '[') {
+      if (seq[0] == '[')
+      {
         return seq[1];
       }
       return 0;
     }
 
-    if(c == '\n' || c == '\r') return '\n';
+    if (c == '\n' || c == '\r')
+      return '\n';
 
     return std::tolower(c);
   }
@@ -791,37 +836,48 @@ namespace starship
     // --- Enemies ---
     std::size_t size;
     ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
-    if(size > MAX_ENEMIES) size = MAX_ENEMIES;
+    if (size > MAX_ENEMIES)
+      size = MAX_ENEMIES;
     enemies_.resize(size);
-    for(auto &e : enemies_) ifs.read(reinterpret_cast<char *>(&e), sizeof(e));
+    for (auto &e : enemies_)
+      ifs.read(reinterpret_cast<char *>(&e), sizeof(e));
 
     // --- Friends ---
     ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
-    if(size > MAX_FRIENDS) size = MAX_FRIENDS;
+    if (size > MAX_FRIENDS)
+      size = MAX_FRIENDS;
     friends_.resize(size);
-    for(auto &f : friends_) ifs.read(reinterpret_cast<char *>(&f), sizeof(f));
+    for (auto &f : friends_)
+      ifs.read(reinterpret_cast<char *>(&f), sizeof(f));
 
     // --- Planets ---
     ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
-    if(size > MAX_PLANETS) size = MAX_PLANETS;
+    if (size > MAX_PLANETS)
+      size = MAX_PLANETS;
     planets_.resize(size);
-    for(auto &p : planets_) ifs.read(reinterpret_cast<char *>(&p), sizeof(p));
+    for (auto &p : planets_)
+      ifs.read(reinterpret_cast<char *>(&p), sizeof(p));
 
     // --- Starbases ---
     ifs.read(reinterpret_cast<char *>(&size), sizeof(size));
-    if(size > MAX_STARBASES) size = MAX_STARBASES;
+    if (size > MAX_STARBASES)
+      size = MAX_STARBASES;
     starbases_.resize(size);
-    for(auto &s : starbases_) ifs.read(reinterpret_cast<char *>(&s), sizeof(s));
+    for (auto &s : starbases_)
+      ifs.read(reinterpret_cast<char *>(&s), sizeof(s));
 
     // --- Captain's Log (text) ---
     captains_log_.clear();
-    while(ifs) {
+    while (ifs)
+    {
       std::size_t len;
       ifs.read(reinterpret_cast<char *>(&len), sizeof(len));
-      if(ifs.eof()) break;
+      if (ifs.eof())
+        break;
 
       const std::size_t MAX_LOG_LEN = 1024;
-      if(len > MAX_LOG_LEN) len = MAX_LOG_LEN;
+      if (len > MAX_LOG_LEN)
+        len = MAX_LOG_LEN;
 
       std::string log(len, ' ');
       ifs.read(&log[0], len);
