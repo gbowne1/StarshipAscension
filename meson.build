@@ -4,8 +4,11 @@ project('StarshipAscension', 'cpp',
 
 inc = include_directories('include')
 
-exe = executable('StarshipAscension', 'src/main.cpp', 'src/game.cpp', 'src/util.cpp',
+glog_dep = dependency('glog', required: true)
+
+exe = executable('StarshipAscension', 'src/main.cpp', 'src/game.cpp', 'src/util.cpp', 'src/ship.cpp',
   include_directories : inc,
+  dependencies: [glog_dep],
   install : true)
 
 # For debug/release, use meson configure -Dbuildtype=debug or release
