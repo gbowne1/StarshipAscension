@@ -55,7 +55,8 @@ private:
     PLAYING,
     SETTINGS,
     HELP,
-    CAPTAINS_LOG
+    CAPTAINS_LOG,
+    EXIT
   };
 
   enum class MenuOption {
